@@ -29,8 +29,8 @@ Grab the latest release and either:
 - **Portable** — extract the `.zip` anywhere and run `Kokoon.UI.exe` directly. No install, no admin
   rights; settings and history live under `%LOCALAPPDATA%`/`%APPDATA%`, not the app folder.
 
-See the [User Guide](docs/USER_GUIDE.html) for full usage instructions, and
-[System Requirements](docs/USER_GUIDE.html#s2) for what's needed.
+See the [User Guide](docs/USER_GUIDE.md) for full usage instructions, and
+[System Requirements](docs/USER_GUIDE.md#2-system-requirements) for what's needed.
 
 ## Building from source
 
@@ -49,7 +49,7 @@ dotnet build Kokoon.UI/Kokoon.UI.csproj -p:Platform=x64 -p:Configuration=Debug
 ```
 
 For a self-contained Release publish and portable zip, see the
-[publish & bundling guide](docs/publish-portable-guide.html) — a full walkthrough with
+[publish & bundling guide](docs/publish-portable-guide.md) — a full walkthrough with
 copy-pasteable PowerShell.
 
 ## Project structure
@@ -80,9 +80,12 @@ CommunityToolkit.Mvvm · yt-dlp + ffmpeg (bundled)
 
 | Doc | Purpose |
 |---|---|
-| [User Guide](docs/USER_GUIDE.html) | Installing, configuring, and using the app |
-| [Publish & Portable Bundle Guide](docs/publish-portable-guide.html) | Copy-pasteable PowerShell for the self-contained publish + portable zip pipeline |
-| [Commit & Push Guide](docs/commit-and-push-guide.html) | One-time GitHub setup and everyday git workflow for this repo |
+| [User Guide](docs/USER_GUIDE.md) | Installing, configuring, and using the app |
+| [Publish & Portable Bundle Guide](docs/publish-portable-guide.md) | Copy-pasteable PowerShell for the self-contained publish + portable zip pipeline |
+| [Commit & Push Guide](docs/commit-and-push-guide.md) | One-time GitHub setup and everyday git workflow for this repo |
+
+Each of the docs above also has a locally-styled `.html` twin in `docs/` (not pushed — GitHub
+can't render `.html` inline the way it renders `.md`) for a nicer offline reading view.
 
 ## License
 

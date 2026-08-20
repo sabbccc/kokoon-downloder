@@ -30,3 +30,7 @@ Thumbs.db
 .DS_Store
 .vscode/
 .idea/
+
+## Local-only styled doc previews — GitHub can't render .html inline the way it
+## renders .md, so the docs/*.md next to each of these is what actually gets pushed.
+docs/*.html
