@@ -11,7 +11,7 @@ installer-output/
 *.user
 *.suo
 
-## Bundled external tool binaries (downloaded separately, see docs/DEVELOPER_PACKAGING_GUIDE.md section 4)
+## Bundled external tool binaries (downloaded separately, see docs/publish-portable-guide.html)
 Kokoon.VideoGrabber/tools/yt-dlp.exe
 Kokoon.VideoGrabber/tools/ffmpeg.exe
 
@@ -23,3 +23,10 @@ Kokoon.VideoGrabber/tools/ffmpeg.exe
 ## Test results
 TestResults/
 /.claude
+/CLAUDE.md
+
+## OS / editor cruft
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
