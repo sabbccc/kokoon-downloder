@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kokoon Downloader — Commit &amp; Push Guide</title>
+<style>
+  :root {
+    --bg: #141417;
+    --bg-elevated: #1a1a1f;
+    --card: #18181d;
+    --text: #e0e0e6;
+    --text-secondary: #9a9aa5;
+    --accent: #6c5ce7;
+    --accent-soft: rgba(108,92,231,0.15);
+    --stroke: rgba(255,255,255,0.08);
+    --code-bg: #0f0f12;
+    --amber: #f2a93b;
+    --pink: #f2555a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; }
+  .subtitle { color: var(--text-secondary); font-size: 0.95rem; margin: 0 0 28px; }
+  h2 {
+    font-size: 1.05rem;
+    margin: 40px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--stroke);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  p { color: var(--text); }
+  code {
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 0.85rem;
+    background: var(--bg-elevated);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #b3aaf3;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    position: relative;
+  }
+  pre code { background: none; padding: 0; color: var(--text); }
+  .comment { color: #6b7280; }
+  .str { color: #4ade80; }
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--stroke);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.88rem;
+    margin: 14px 0;
+  }
+  .warn {
+    border-left: 3px solid var(--amber);
+    background: rgba(242,169,59,0.12);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.88rem;
+    margin: 14px 0;
+  }
+  .fixed {
+    border-left: 3px solid #4ade80;
+    background: rgba(74,222,128,0.1);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.88rem;
+    margin: 14px 0;
+  }
+  .note-title, .warn-title, .fixed-title {
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .note-title { color: var(--accent); }
+  .warn-title { color: var(--amber); }
+  .fixed-title { color: #4ade80; }
+  ul { padding-left: 20px; }
+  li { margin: 6px 0; color: var(--text); }
+  li::marker { color: var(--text-secondary); }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 14px 0;
+  }
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--stroke);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Commit &amp; Push Guide</h1>
+  <p class="subtitle">This repo has never been committed — no history, no remote configured yet. This is the one-time setup plus the everyday workflow after that.</p>
+
+  <div class="fixed">
+    <div class="fixed-title">Fixed before writing this guide</div>
+    <code>.gitignore</code> had a blanket <code>/*.md</code> rule that silently excluded <strong>both</strong> <code>README.md</code> and <code>CLAUDE.md</code> from the repo root — meaning your first commit would have gone up without a README (GitHub shows a blank repo page) and without the project's own instructions file. Removed that line; both now show up correctly under <code>git status</code>.
+  </div>
+
+  <h2><span class="step-num">1</span> One-time: create the GitHub repo</h2>
+  <p>Do this on <a href="https://github.com/new" style="color:var(--accent)">github.com/new</a> — name it, set visibility, and <strong>don't</strong> initialize with a README/license/gitignore (you already have all three locally). Copy the repo URL it gives you (SSH or HTTPS).</p>
+
+  <h2><span class="step-num">2</span> Review what you're about to commit</h2>
+  <pre id="p1"><button class="copy-btn" onclick="copyBlock('p1')">Copy</button><code>git status</code></pre>
+  <div class="warn">
+    <div class="warn-title">Check before staging</div>
+    Confirm nothing sensitive is in the list — API keys, connection strings, personal file paths. <code>bin/</code>, <code>obj/</code>, <code>publish/</code>, <code>*.log</code>, <code>*.db</code>, and the bundled <code>yt-dlp.exe</code>/<code>ffmpeg.exe</code> are already excluded via <code>.gitignore</code>.
+  </div>
+
+  <h2><span class="step-num">3</span> Stage and make the initial commit</h2>
+  <pre id="p2"><button class="copy-btn" onclick="copyBlock('p2')">Copy</button><code>git add .
+git status   <span class="comment"># double-check the staged list looks right</span>
+git commit -m <span class="str">"Initial commit"</span></code></pre>
+
+  <h2><span class="step-num">4</span> Connect the remote and push</h2>
+  <pre id="p3"><button class="copy-btn" onclick="copyBlock('p3')">Copy</button><code><span class="comment"># replace with your actual repo URL</span>
+git remote add origin https://github.com/&lt;you&gt;/&lt;repo&gt;.git
+git branch -M main
+git push -u origin main</code></pre>
+  <p>After this first push, <code>git push</code> alone works for every commit after — the <code>-u</code> set the upstream tracking branch.</p>
+
+  <h2><span class="step-num">✓</span> Everyday workflow, after setup</h2>
+  <pre id="p4"><button class="copy-btn" onclick="copyBlock('p4')">Copy</button><code>git status
+git add &lt;specific files&gt;   <span class="comment"># prefer this over `git add .` once history exists</span>
+git commit -m <span class="str">"Short, why-focused message"</span>
+git push</code></pre>
+
+  <div class="note">
+    <div class="note-title">Good habits going forward</div>
+    <ul style="margin:6px 0 0;">
+      <li>Stage specific files by name rather than <code>git add -A</code>/<code>git add .</code> once the repo has history — an unnoticed stray file is much easier to catch that way.</li>
+      <li>Write commit messages around <em>why</em>, not a restatement of the diff.</li>
+      <li>Never force-push (<code>git push --force</code>) to <code>main</code> unless you specifically mean to overwrite remote history — ask first if unsure.</li>
+      <li>If a file looks like it should be tracked but isn't showing up in <code>git status</code>, check <code>.gitignore</code> first — that's exactly what happened with <code>README.md</code> here.</li>
+    </ul>
+  </div>
+
+  <div class="footer">Kokoon Downloader · internal git reference</div>
+</div>
+
+<script>
+function copyBlock(id) {
+  const el = document.getElementById(id);
+  const text = el.innerText.replace(/^Copy\n?/, '');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

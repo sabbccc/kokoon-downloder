@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>Kokoon.UI</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;arm64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon>Assets\kokoon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Ensure PRI and XBF resources are included in publish output -->
+  <Target Name="CopyPriAndXbfToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_PriFile Include="$(OutputPath)\$(AssemblyName).pri" />
+      <_XbfFiles Include="$(OutputPath)\**\*.xbf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_PriFile)" DestinationFolder="$(PublishDir)" Condition="Exists('%(FullPath)')" />
+    <Copy SourceFiles="@(_XbfFiles)" DestinationFiles="@(_XbfFiles->'$(PublishDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+  <!-- The WindowsAppSDK self-contained payload (Microsoft.WindowsAppSDK.SelfContained.targets,
+       AddMicrosoftWindowsAppSDKPayloadFiles) unconditionally copies a *.mui satellite-resource
+       folder per supported UI language (~90 of them) into the publish output — there is no
+       WindowsAppSDK/MSBuild property to restrict this list (unlike SatelliteResourceLanguages,
+       which only affects .NET satellite resource assemblies, not these native .mui files). This
+       app only ships an English UI, so prune every language folder except en-us after publish. -->
+  <Target Name="PruneWindowsAppSDKLocaleResources" AfterTargets="Publish">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Get-ChildItem -LiteralPath '$(PublishDir)' -Directory | Where-Object { $_.Name -notin @('en-us','tools','runtimes','Themes','Views','Microsoft.UI.Xaml','Assets') } | Remove-Item -Recurse -Force&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.*" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.*" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
+    <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.*" />
+    <PackageReference Include="Serilog" Version="3.*" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.*" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kokoon.Core\Kokoon.Core.csproj" />
+    <ProjectReference Include="..\Kokoon.VideoGrabber\Kokoon.VideoGrabber.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\kokoon-256.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\kokoon.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

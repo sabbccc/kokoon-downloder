@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Kokoon.Core/Kokoon.Core.csproj" />
+  <Project Path="Kokoon.VideoGrabber/Kokoon.VideoGrabber.csproj" />
+  <Project Path="Kokoon.UI/Kokoon.UI.csproj">
+    <Platform Project="x64" />
+  </Project>
+</Solution>

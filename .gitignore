@@ -1,0 +1,25 @@
+## .NET build artifacts
+bin/
+obj/
+
+## Publish / packaging output
+publish/
+installer-output/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## Bundled external tool binaries (downloaded separately, see docs/DEVELOPER_PACKAGING_GUIDE.md section 4)
+Kokoon.VideoGrabber/tools/yt-dlp.exe
+Kokoon.VideoGrabber/tools/ffmpeg.exe
+
+## Local app data that can end up alongside the repo during testing
+*.log
+*.db
+*.dbmdl
+
+## Test results
+TestResults/
+/.claude

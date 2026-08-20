@@ -1,0 +1,712 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ================================================================== -->
+    <!--  THEME-VARYING RESOURCES — looked up live via {ThemeResource} as   -->
+    <!--  the app's effective theme (Dark/Light) changes, including for     -->
+    <!--  already-rendered elements. Only brush/color values live here;     -->
+    <!--  Styles and non-varying metrics live below, outside this block.    -->
+    <!-- ================================================================== -->
+    <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Dark">
+            <!-- Backgrounds -->
+            <SolidColorBrush x:Key="BackgroundPrimary"   Color="#141417"/>
+            <SolidColorBrush x:Key="BackgroundSecondary" Color="#1A1A1F"/>
+            <SolidColorBrush x:Key="BackgroundElevated"  Color="#18181D"/>
+            <SolidColorBrush x:Key="StrokeBrush"         Color="#0FFFFFFF"/>
+
+            <!-- WinUI's Fluent2 system controls (Slider, ToggleSwitch, RadioButton, CheckBox,
+                 ContentDialog's accent button) read AccentFillColorDefaultBrush/Secondary/
+                 Tertiary/Disabled, not NeonBlueBrush or ContentDialogPrimaryButton* — those
+                 bind to SystemAccentColorLight2 (Dark) / SystemAccentColorDark1 (Light) in
+                 generic.xaml, so the full ramp must be overridden to re-theme those controls. -->
+            <Color x:Key="SystemAccentColor">#6C5CE7</Color>
+            <Color x:Key="SystemAccentColorLight1">#8E82ED</Color>
+            <Color x:Key="SystemAccentColorLight2">#6C5CE7</Color>
+            <Color x:Key="SystemAccentColorLight3">#B3AAF3</Color>
+            <Color x:Key="SystemAccentColorDark1">#5C4EC4</Color>
+            <Color x:Key="SystemAccentColorDark2">#4F43A9</Color>
+            <Color x:Key="SystemAccentColorDark3">#3F3586</Color>
+
+            <!-- Accents (opaque) — primary accent is the app logo's purple gradient. -->
+            <SolidColorBrush x:Key="NeonBlueBrush"        Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="AccentGradientEndBrush" Color="#4834D4"/>
+            <!-- Literal hex stops (not ThemeResource-linked) must be kept in sync manually
+                 with NeonBlueBrush/AccentGradientEndBrush above if those ever change. -->
+            <LinearGradientBrush x:Key="LogoGradientBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#6C5CE7" Offset="0"/>
+                <GradientStop Color="#4834D4" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="NeonPurpleBrush" Color="#8B7CF0"/>
+            <!-- The app's former primary accent, kept under its own name (rather than
+                 folded into NeonPurpleBrush) since it's still used side-by-side with
+                 purple/blue elsewhere (Queued status vs. Downloading, quality vs.
+                 duration badges) and needs to stay visually distinct from both. -->
+            <SolidColorBrush x:Key="NeonTealBrush"   Color="#3ECFB4"/>
+            <SolidColorBrush x:Key="NeonGreenBrush"  Color="#4ADE80"/>
+            <SolidColorBrush x:Key="NeonPinkBrush"   Color="#F2555A"/>
+            <SolidColorBrush x:Key="NeonAmberBrush"  Color="#F2A93B"/>
+
+            <!-- Accents (semi-transparent, for subtle tints/badges) -->
+            <SolidColorBrush x:Key="NeonBlue20"   Color="#1A6C5CE7"/>
+            <SolidColorBrush x:Key="NeonBlue40"   Color="#4D6C5CE7"/>
+            <SolidColorBrush x:Key="NeonPurple20" Color="#298B7CF0"/>
+            <SolidColorBrush x:Key="NeonPurple40" Color="#4D8B7CF0"/>
+            <SolidColorBrush x:Key="NeonTeal20"   Color="#1A3ECFB4"/>
+            <SolidColorBrush x:Key="NeonGreen20"  Color="#1A4ADE80"/>
+            <SolidColorBrush x:Key="NeonPink20"   Color="#1AF2555A"/>
+            <SolidColorBrush x:Key="NeonAmber20"  Color="#14F2A93B"/>
+
+            <!-- Text -->
+            <SolidColorBrush x:Key="TextPrimary"   Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="TextSecondary" Color="#73FFFFFF"/>
+            <SolidColorBrush x:Key="TextDisabled"  Color="#40FFFFFF"/>
+
+            <!-- Contrast text/icon color for content on top of an accent-filled surface -->
+            <SolidColorBrush x:Key="AccentForegroundBrush" Color="#111111"/>
+
+            <!-- ProgressBar lightweight-styling resources -->
+            <SolidColorBrush x:Key="ProgressBarBackground" Color="#18181D"/>
+            <SolidColorBrush x:Key="ProgressBarForeground" Color="#6C5CE7"/>
+
+            <!-- System control tokens: ScrollBar / ContentDialog / ToolTip / Slider / TextBox -->
+            <SolidColorBrush x:Key="ScrollBarThumbFill"             Color="#1AFFFFFF"/>
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver"  Color="#26FFFFFF"/>
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed"      Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="ScrollBarTrackFill"             Color="Transparent"/>
+            <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver"  Color="#1A1A1F"/>
+            <SolidColorBrush x:Key="ScrollBarTrackStroke"           Color="Transparent"/>
+
+            <SolidColorBrush x:Key="ContentDialogBackground"              Color="#18181D"/>
+            <SolidColorBrush x:Key="ContentDialogBorderBrush"              Color="#0FFFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogForeground"               Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="ContentDialogTopOverlay"               Color="#1A1A1F"/>
+            <SolidColorBrush x:Key="ContentDialogSmokeFill"                Color="#CC000000"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonBackground"            Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonForeground"            Color="#111111"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonBackgroundPointerOver" Color="#8E82ED"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonForegroundPointerOver" Color="#111111"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonBackgroundPressed"     Color="#5C4EC4"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonForegroundPressed"     Color="#111111"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonBackground"            Color="#0DFFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonForeground"            Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonBorderBrush"           Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonBackgroundPointerOver" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonForegroundPointerOver" Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonBackground"            Color="#0DFFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonForeground"            Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonBackgroundPointerOver" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonForegroundPointerOver" Color="#E0E0E6"/>
+
+            <SolidColorBrush x:Key="ToolTipBackground"  Color="#18181D"/>
+            <SolidColorBrush x:Key="ToolTipForeground"  Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#0FFFFFFF"/>
+
+            <SolidColorBrush x:Key="SliderTrackFill"                 Color="#0FFFFFFF"/>
+            <SolidColorBrush x:Key="SliderTrackFillPointerOver"      Color="#1AFFFFFF"/>
+            <SolidColorBrush x:Key="SliderTrackFillPressed"          Color="#0FFFFFFF"/>
+            <SolidColorBrush x:Key="SliderTrackFillDisabled"         Color="#08FFFFFF"/>
+            <SolidColorBrush x:Key="SliderTrackValueFill"            Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#8E82ED"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillPressed"     Color="#5C4EC4"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillDisabled"    Color="#40FFFFFF"/>
+            <SolidColorBrush x:Key="SliderThumbBackground"           Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#8E82ED"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundPressed"     Color="#5C4EC4"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundDisabled"    Color="#40FFFFFF"/>
+
+            <SolidColorBrush x:Key="TextControlBackground"             Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver"  Color="#0DFFFFFF"/>
+            <SolidColorBrush x:Key="TextControlBackgroundFocused"      Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled"     Color="#141417"/>
+            <SolidColorBrush x:Key="TextControlForeground"              Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="TextControlForegroundPointerOver"   Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="TextControlForegroundFocused"       Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="TextControlForegroundDisabled"      Color="#40FFFFFF"/>
+            <SolidColorBrush x:Key="TextControlBorderBrush"             Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver"  Color="#1AFFFFFF"/>
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused"      Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="TextControlBorderBrushDisabled"     Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForeground"           Color="#73FFFFFF"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#85FFFFFF"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused"     Color="#59FFFFFF"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundDisabled"    Color="#40FFFFFF"/>
+            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#4D6C5CE7"/>
+            <SolidColorBrush x:Key="TextControlHeaderForeground"         Color="#E0E0E6"/>
+            <SolidColorBrush x:Key="TextControlHeaderForegroundDisabled" Color="#40FFFFFF"/>
+
+            <!-- ListView multi-select checkbox (SelectionMode="Multiple" on the downloads
+                 list) — overridden directly rather than via AccentFillColorDefaultBrush,
+                 matching the Slider/ToggleSwitch pattern above, so it's clearly visible
+                 against BackgroundElevated instead of the near-invisible default. -->
+            <SolidColorBrush x:Key="ListViewItemCheckBoxBrush"                 Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPointerOverBrush"      Color="#1AFFFFFF"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPressedBrush"          Color="#26FFFFFF"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxDisabledBrush"         Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxBorderBrush"           Color="#26FFFFFF"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPointerOverBorderBrush" Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPressedBorderBrush"    Color="#5C4EC4"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxDisabledBorderBrush"   Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedBrush"            Color="#6C5CE7"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedPointerOverBrush" Color="#8E82ED"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedPressedBrush"     Color="#5C4EC4"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedDisabledBrush"    Color="#404D6C5CE7"/>
+            <!-- Not TextOnAccentFillColorPrimaryBrush's usual dark tone: the checked square's
+                 own accent fill doesn't reliably paint through this lightweight-styling key in
+                 WinUI 3, so the checkmark itself carries the accent color instead of relying
+                 on contrast against a filled square. -->
+            <SolidColorBrush x:Key="ListViewItemCheckBrush" Color="#6C5CE7"/>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+            <!-- Backgrounds -->
+            <SolidColorBrush x:Key="BackgroundPrimary"   Color="#F5F5F7"/>
+            <SolidColorBrush x:Key="BackgroundSecondary" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="BackgroundElevated"  Color="#FAFAFA"/>
+            <SolidColorBrush x:Key="StrokeBrush"         Color="#0F000000"/>
+
+            <!-- See the matching comment in the Dark dictionary above — here generic.xaml
+                 binds AccentFillColorDefaultBrush to SystemAccentColorDark1 instead. -->
+            <Color x:Key="SystemAccentColor">#4834D4</Color>
+            <Color x:Key="SystemAccentColorLight1">#7263DE</Color>
+            <Color x:Key="SystemAccentColorLight2">#9A8FE7</Color>
+            <Color x:Key="SystemAccentColorLight3">#C1BAF0</Color>
+            <Color x:Key="SystemAccentColorDark1">#4834D4</Color>
+            <Color x:Key="SystemAccentColorDark2">#3C2BB0</Color>
+            <Color x:Key="SystemAccentColorDark3">#31238F</Color>
+
+            <!-- Accents (opaque) — primary accent is the app logo's purple gradient; the
+                 darker of its two stops is used as the base here (rather than the Dark
+                 theme's brighter stop) for adequate contrast against light backgrounds. -->
+            <SolidColorBrush x:Key="NeonBlueBrush"        Color="#4834D4"/>
+            <SolidColorBrush x:Key="AccentGradientEndBrush" Color="#3C2BB0"/>
+            <!-- Literal hex stops (not ThemeResource-linked) must be kept in sync manually
+                 with NeonBlueBrush/AccentGradientEndBrush above if those ever change. -->
+            <LinearGradientBrush x:Key="LogoGradientBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#4834D4" Offset="0"/>
+                <GradientStop Color="#3C2BB0" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="NeonPurpleBrush" Color="#6D5FE0"/>
+            <!-- The app's former primary accent, kept under its own name (rather than
+                 folded into NeonPurpleBrush) since it's still used side-by-side with
+                 purple/blue elsewhere (Queued status vs. Downloading, quality vs.
+                 duration badges) and needs to stay visually distinct from both. -->
+            <SolidColorBrush x:Key="NeonTealBrush"   Color="#0EA38A"/>
+            <SolidColorBrush x:Key="NeonGreenBrush"  Color="#22C55E"/>
+            <SolidColorBrush x:Key="NeonPinkBrush"   Color="#EF4444"/>
+            <SolidColorBrush x:Key="NeonAmberBrush"  Color="#D99418"/>
+
+            <!-- Accents (semi-transparent, for subtle tints/badges) -->
+            <SolidColorBrush x:Key="NeonBlue20"   Color="#1A4834D4"/>
+            <SolidColorBrush x:Key="NeonBlue40"   Color="#404834D4"/>
+            <SolidColorBrush x:Key="NeonPurple20" Color="#146D5FE0"/>
+            <SolidColorBrush x:Key="NeonPurple40" Color="#406D5FE0"/>
+            <SolidColorBrush x:Key="NeonTeal20"   Color="#1A0EA38A"/>
+            <SolidColorBrush x:Key="NeonGreen20"  Color="#1422C55E"/>
+            <SolidColorBrush x:Key="NeonPink20"   Color="#14EF4444"/>
+            <SolidColorBrush x:Key="NeonAmber20"  Color="#14D99418"/>
+
+            <!-- Text -->
+            <SolidColorBrush x:Key="TextPrimary"   Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="TextSecondary" Color="#73000000"/>
+            <SolidColorBrush x:Key="TextDisabled"  Color="#4D000000"/>
+
+            <!-- Contrast text/icon color for content on top of an accent-filled surface -->
+            <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF"/>
+
+            <!-- ProgressBar lightweight-styling resources -->
+            <SolidColorBrush x:Key="ProgressBarBackground" Color="#0D000000"/>
+            <SolidColorBrush x:Key="ProgressBarForeground" Color="#4834D4"/>
+
+            <!-- System control tokens: ScrollBar / ContentDialog / ToolTip / Slider / TextBox -->
+            <SolidColorBrush x:Key="ScrollBarThumbFill"             Color="#1A000000"/>
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver"  Color="#26000000"/>
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed"      Color="#4834D4"/>
+            <SolidColorBrush x:Key="ScrollBarTrackFill"             Color="Transparent"/>
+            <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver"  Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ScrollBarTrackStroke"           Color="Transparent"/>
+
+            <SolidColorBrush x:Key="ContentDialogBackground"              Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogBorderBrush"              Color="#0F000000"/>
+            <SolidColorBrush x:Key="ContentDialogForeground"               Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="ContentDialogTopOverlay"               Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogSmokeFill"                Color="#66000000"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonBackground"            Color="#4834D4"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonForeground"            Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonBackgroundPointerOver" Color="#7263DE"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonForegroundPointerOver" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonBackgroundPressed"     Color="#3C2BB0"/>
+            <SolidColorBrush x:Key="ContentDialogPrimaryButtonForegroundPressed"     Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonBackground"            Color="#FAFAFA"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonForeground"            Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonBorderBrush"           Color="#1A000000"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonBackgroundPointerOver" Color="#1F000000"/>
+            <SolidColorBrush x:Key="ContentDialogSecondaryButtonForegroundPointerOver" Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonBackground"            Color="#FAFAFA"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonForeground"            Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonBackgroundPointerOver" Color="#1F000000"/>
+            <SolidColorBrush x:Key="ContentDialogCloseButtonForegroundPointerOver" Color="#1A1A1A"/>
+
+            <SolidColorBrush x:Key="ToolTipBackground"  Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ToolTipForeground"  Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#0F000000"/>
+
+            <SolidColorBrush x:Key="SliderTrackFill"                 Color="#0F000000"/>
+            <SolidColorBrush x:Key="SliderTrackFillPointerOver"      Color="#1A000000"/>
+            <SolidColorBrush x:Key="SliderTrackFillPressed"          Color="#0F000000"/>
+            <SolidColorBrush x:Key="SliderTrackFillDisabled"         Color="#08000000"/>
+            <SolidColorBrush x:Key="SliderTrackValueFill"            Color="#4834D4"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#7263DE"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillPressed"     Color="#3C2BB0"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillDisabled"    Color="#4D000000"/>
+            <SolidColorBrush x:Key="SliderThumbBackground"           Color="#4834D4"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#7263DE"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundPressed"     Color="#3C2BB0"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundDisabled"    Color="#4D000000"/>
+
+            <SolidColorBrush x:Key="TextControlBackground"             Color="#FAFAFA"/>
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver"  Color="#FBFBFC"/>
+            <SolidColorBrush x:Key="TextControlBackgroundFocused"      Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled"     Color="#F2F2F5"/>
+            <SolidColorBrush x:Key="TextControlForeground"              Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="TextControlForegroundPointerOver"   Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="TextControlForegroundFocused"       Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="TextControlForegroundDisabled"      Color="#4D000000"/>
+            <SolidColorBrush x:Key="TextControlBorderBrush"             Color="#1A000000"/>
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver"  Color="#26000000"/>
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused"      Color="#4834D4"/>
+            <SolidColorBrush x:Key="TextControlBorderBrushDisabled"     Color="#0F000000"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForeground"           Color="#73000000"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#85000000"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused"     Color="#59000000"/>
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundDisabled"    Color="#40000000"/>
+            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#404834D4"/>
+            <SolidColorBrush x:Key="TextControlHeaderForeground"         Color="#1A1A1A"/>
+            <SolidColorBrush x:Key="TextControlHeaderForegroundDisabled" Color="#4D000000"/>
+
+            <!-- See the matching comment in the Dark dictionary above. -->
+            <SolidColorBrush x:Key="ListViewItemCheckBoxBrush"                 Color="#0F000000"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPointerOverBrush"      Color="#1A000000"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPressedBrush"          Color="#26000000"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxDisabledBrush"         Color="#08000000"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxBorderBrush"           Color="#33000000"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPointerOverBorderBrush" Color="#4834D4"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxPressedBorderBrush"    Color="#3C2BB0"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxDisabledBorderBrush"   Color="#14000000"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedBrush"            Color="#4834D4"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedPointerOverBrush" Color="#7263DE"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedPressedBrush"     Color="#3C2BB0"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBoxSelectedDisabledBrush"    Color="#404834D4"/>
+            <SolidColorBrush x:Key="ListViewItemCheckBrush" Color="#4834D4"/>
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- ================================================================== -->
+    <!--  NON-VARYING RESOURCES — same value regardless of Dark/Light, so   -->
+    <!--  they live once at the top level instead of in both dictionaries.  -->
+    <!-- ================================================================== -->
+    <CornerRadius x:Key="CornerRadiusCard">12</CornerRadius>
+    <CornerRadius x:Key="CornerRadiusInput">6</CornerRadius>
+    <CornerRadius x:Key="CornerRadiusProgress">3</CornerRadius>
+    <CornerRadius x:Key="CornerRadiusButton">8</CornerRadius>
+    <CornerRadius x:Key="CornerRadiusPill">999</CornerRadius>
+    <CornerRadius x:Key="ContentDialogBorderCornerRadius">10</CornerRadius>
+    <CornerRadius x:Key="ListViewItemCheckBoxCornerRadius">5</CornerRadius>
+
+    <Thickness x:Key="CardPadding">16</Thickness>
+    <Thickness x:Key="ButtonPadding">10,6</Thickness>
+    <Thickness x:Key="StrokeThickness">1</Thickness>
+    <Thickness x:Key="ToolTipBorderThemeThickness">1</Thickness>
+
+    <!-- ================================================================== -->
+    <!--  STYLES — defined once; brush-valued Setters use {ThemeResource}   -->
+    <!--  so they re-resolve live against the dictionaries above whenever   -->
+    <!--  the effective theme changes, even for already-rendered elements.  -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="NeonProgressBarStyle" TargetType="ProgressBar">
+        <Style.Setters>
+            <Setter Property="Height" Value="4"/>
+            <Setter Property="MinHeight" Value="4"/>
+            <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusProgress}"/>
+            <Setter Property="Background" Value="{ThemeResource BackgroundElevated}"/>
+            <Setter Property="Foreground" Value="{ThemeResource NeonBlueBrush}"/>
+        </Style.Setters>
+    </Style>
+
+    <Style x:Key="NeonButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource BackgroundElevated}"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource StrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusButton}"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="RootBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootBorder"
+                                                                       Storyboard.TargetProperty="BorderBrush">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource NeonBlueBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootBorder"
+                                                                       Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource BackgroundSecondary}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenterElement"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Focused"/>
+                                <VisualState x:Name="Unfocused"/>
+                                <VisualState x:Name="PointerFocused"/>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <ContentPresenter x:Name="ContentPresenterElement"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          ContentTransitions="{TemplateBinding ContentTransitions}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          AutomationProperties.AccessibilityView="Raw"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NeonButtonPrimaryStyle" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource NeonBlueBrush}"/>
+        <Setter Property="Foreground" Value="{ThemeResource AccentForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource NeonBlueBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusButton}"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="PrimaryRootBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}"
+                            Opacity="1">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="PrimaryRootBorder"
+                                                          Storyboard.TargetProperty="Opacity"
+                                                          To="0.88" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="PrimaryRootBorder"
+                                                          Storyboard.TargetProperty="Opacity"
+                                                          To="0.76" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PrimaryRootBorder"
+                                                                       Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource BackgroundElevated}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PrimaryContentPresenter"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Focused"/>
+                                <VisualState x:Name="Unfocused"/>
+                                <VisualState x:Name="PointerFocused"/>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <ContentPresenter x:Name="PrimaryContentPresenter"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          ContentTransitions="{TemplateBinding ContentTransitions}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          AutomationProperties.AccessibilityView="Raw"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DownloadCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource BackgroundSecondary}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource StrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusCard}"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- SidebarButtonStyle — flat hover/selected states, single accent left bar -->
+    <Style x:Key="SidebarButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextSecondary}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusButton}"/>
+        <Setter Property="Padding" Value="8,8"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="RootGrid">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SidebarRootBorder"
+                                                                       Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource BackgroundElevated}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SidebarContentPresenter"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextPrimary}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SidebarRootBorder"
+                                                                       Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource StrokeBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SidebarContentPresenter"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextPrimary}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SidebarContentPresenter"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <!-- Selection states (driven by SidebarNavButton.IsSelected) -->
+                            <VisualStateGroup x:Name="SelectionStates">
+                                <VisualState x:Name="Unselected"/>
+                                <VisualState x:Name="Selected">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SelectedBgTint"
+                                                                       Storyboard.TargetProperty="Opacity">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="1"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SelectedLeftAccent"
+                                                                       Storyboard.TargetProperty="Opacity">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="1"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Focused"/>
+                                <VisualState x:Name="Unfocused"/>
+                                <VisualState x:Name="PointerFocused"/>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <!-- Selected background tint (flat, subtle) -->
+                        <Border x:Name="SelectedBgTint"
+                                Background="{ThemeResource NeonBlue20}"
+                                CornerRadius="{TemplateBinding CornerRadius}"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Opacity="0"
+                                IsHitTestVisible="False"/>
+
+                        <!-- Selected left accent (flat, single color) -->
+                        <Border x:Name="SelectedLeftAccent"
+                                Width="3"
+                                Background="{ThemeResource NeonBlueBrush}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Stretch"
+                                CornerRadius="0,2,2,0"
+                                Opacity="0"
+                                Margin="-8,4,0,4"/>
+
+                        <!-- Main content area -->
+                        <Border x:Name="SidebarRootBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                CornerRadius="{TemplateBinding CornerRadius}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter x:Name="SidebarContentPresenter"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              ContentTransitions="{TemplateBinding ContentTransitions}"
+                                              Foreground="{TemplateBinding Foreground}"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              AutomationProperties.AccessibilityView="Raw"/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ================================================================== -->
+    <!--  TEXT STYLES                                                        -->
+    <!-- ================================================================== -->
+    <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextPrimary}"/>
+    </Style>
+
+    <Style x:Key="SubheaderTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextPrimary}"/>
+    </Style>
+
+    <Style x:Key="BodyTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextPrimary}"/>
+    </Style>
+
+    <Style x:Key="CaptionTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextSecondary}"/>
+    </Style>
+
+    <Style x:Key="MonoTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontFamily" Value="Cascadia Code, Consolas"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextPrimary}"/>
+    </Style>
+
+    <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="CharacterSpacing" Value="30"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextSecondary}"/>
+    </Style>
+
+    <!-- Unselected look only — the selected pill's Background/BorderBrush/Foreground/
+         FontWeight are set explicitly in SettingsPage.xaml.cs (UpdateThemePillVisuals),
+         since WinUI ToggleButton's built-in Checked visual state pulls
+         AccentFillColorDefaultBrush instead of these style setters. -->
+    <Style x:Key="ThemePillButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource BackgroundElevated}"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextSecondary}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource StrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="7"/>
+        <Setter Property="Padding" Value="16,6"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <!-- ================================================================== -->
+    <!--  STATUS BADGE STYLES                                               -->
+    <!-- ================================================================== -->
+    <Style x:Key="StatusBadgeBase" TargetType="Border">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <Style x:Key="StatusBadgeDownloading" TargetType="Border" BasedOn="{StaticResource StatusBadgeBase}">
+        <Setter Property="Background" Value="{ThemeResource NeonBlue20}"/>
+    </Style>
+
+    <Style x:Key="StatusBadgeCompleted" TargetType="Border" BasedOn="{StaticResource StatusBadgeBase}">
+        <Setter Property="Background" Value="{ThemeResource NeonGreen20}"/>
+    </Style>
+
+    <Style x:Key="StatusBadgeError" TargetType="Border" BasedOn="{StaticResource StatusBadgeBase}">
+        <Setter Property="Background" Value="{ThemeResource NeonPink20}"/>
+    </Style>
+
+    <Style x:Key="StatusBadgePaused" TargetType="Border" BasedOn="{StaticResource StatusBadgeBase}">
+        <Setter Property="Background" Value="{ThemeResource NeonAmber20}"/>
+    </Style>
+
+    <Style x:Key="StatusBadgeQueued" TargetType="Border" BasedOn="{StaticResource StatusBadgeBase}">
+        <Setter Property="Background" Value="{ThemeResource NeonTeal20}"/>
+    </Style>
+
+    <!-- Status badge text styles (to pair with the badge borders) -->
+    <Style x:Key="StatusTextDownloading" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{ThemeResource NeonBlueBrush}"/>
+    </Style>
+
+    <Style x:Key="StatusTextCompleted" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{ThemeResource NeonGreenBrush}"/>
+    </Style>
+
+    <Style x:Key="StatusTextError" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{ThemeResource NeonPinkBrush}"/>
+    </Style>
+
+    <Style x:Key="StatusTextPaused" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{ThemeResource NeonAmberBrush}"/>
+    </Style>
+
+    <Style x:Key="StatusTextQueued" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{ThemeResource NeonTealBrush}"/>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,30 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C5CE7"/>
+      <stop offset="100%" stop-color="#4834D4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg1)"/>
+
+  <!-- Cocoon pod shape (asymmetric leaf/pod silhouette) -->
+  <path d="M256 96
+           C 320 96, 372 148, 372 224
+           C 372 300, 340 372, 256 416
+           C 172 372, 140 300, 140 224
+           C 140 148, 192 96, 256 96 Z"
+        fill="#FFFFFF" opacity="0.14"/>
+
+  <!-- Inner cocoon wrap lines (segmented texture, like cocoon ridges) -->
+  <path d="M164 200 C 210 220, 302 220, 348 200" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M156 260 C 210 285, 302 285, 356 260" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M172 320 C 214 340, 298 340, 340 320" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.35"/>
+
+  <!-- Download arrow (centered, solid) -->
+  <g fill="#FFFFFF">
+    <rect x="234" y="170" width="44" height="110" rx="10"/>
+    <path d="M256 320 L200 250 L312 250 Z"/>
+  </g>
+</svg>

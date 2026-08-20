@@ -1,0 +1,963 @@
+<Window
+    x:Class="Kokoon.UI.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Kokoon.UI.Views"
+    xmlns:vm="using:Kokoon.UI.ViewModels"
+    xmlns:converters="using:Kokoon.UI.Converters"
+    xmlns:controls="using:Kokoon.UI.Controls"
+    Title="Kokoon Downloader">
+
+    <!-- Root Grid — DataContext set to ViewModel so {Binding} expressions
+         for converter-based bindings resolve against MainViewModel.
+         (x:Bind with converters cannot target a Window because Window is
+         not a FrameworkElement, so we use {Binding} for those.) -->
+    <Grid x:Name="RootWindowGrid"
+          Background="{ThemeResource BackgroundPrimary}"
+          DataContext="{x:Bind ViewModel}">
+        <Grid.Resources>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:ProgressToPercentConverter x:Key="ProgressToPercentConverter"/>
+            <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+            <converters:StatusToColorConverter x:Key="StatusToColorConverter"/>
+            <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+            <converters:FilterMatchConverter x:Key="FilterMatchConverter"/>
+
+            <!-- Icon-dock sidebar button style, reused by the Downloads (SidebarNavButton,
+                 has Selected state) and Video Grabber / Settings (plain HandCursorButton)
+                 dock icons — 38x38, radius 10, centered content. -->
+            <Style x:Key="IconDockButtonStyle" TargetType="Button">
+                <Setter Property="Width" Value="38"/>
+                <Setter Property="Height" Value="38"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{ThemeResource TextSecondary}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="IconDockBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    Width="{TemplateBinding Width}"
+                                    Height="{TemplateBinding Height}">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal"/>
+                                        <VisualState x:Name="PointerOver">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="IconDockBorder"
+                                                                               Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource BackgroundElevated}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="IconDockBorder"
+                                                                               Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource StrokeBrush}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled"/>
+                                    </VisualStateGroup>
+                                    <!-- Selection state group used by SidebarNavButton.IsSelected -->
+                                    <VisualStateGroup x:Name="SelectionStates">
+                                        <VisualState x:Name="Unselected"/>
+                                        <VisualState x:Name="Selected">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="IconDockBorder"
+                                                                               Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource NeonBlue20}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="FocusStates">
+                                        <VisualState x:Name="Focused"/>
+                                        <VisualState x:Name="Unfocused"/>
+                                        <VisualState x:Name="PointerFocused"/>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <ContentPresenter x:Name="IconDockContentPresenter"
+                                                  Content="{TemplateBinding Content}"
+                                                  Foreground="{TemplateBinding Foreground}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  AutomationProperties.AccessibilityView="Raw"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Header filter-tab style: underline tabs, not pills. Same Selected/Unselected
+                 VisualState contract as IconDockButtonStyle so SidebarNavButton.IsSelected
+                 drives it identically. Each tab is flat (no border/background box); the
+                 selected tab is marked by a 2px accent underline plus a brighter label,
+                 and the whole strip sits on a hairline rule (set on the containing Border
+                 in the filter-tabs row) so it reads as a tab bar rather than a button row. -->
+            <Style x:Key="FilterTabButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{ThemeResource TextSecondary}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="{TemplateBinding Background}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="2"/>
+                                </Grid.RowDefinitions>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal"/>
+                                        <VisualState x:Name="PointerOver">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TabLabel"
+                                                                               Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextPrimary}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed"/>
+                                        <VisualState x:Name="Disabled"/>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="SelectionStates">
+                                        <VisualState x:Name="Unselected"/>
+                                        <VisualState x:Name="Selected">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TabLabel"
+                                                                               Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextPrimary}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Indicator"
+                                                                               Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource NeonBlueBrush}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="FocusStates">
+                                        <VisualState x:Name="Focused"/>
+                                        <VisualState x:Name="Unfocused"/>
+                                        <VisualState x:Name="PointerFocused"/>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <ContentPresenter x:Name="TabLabel"
+                                                  Grid.Row="0"
+                                                  Content="{TemplateBinding Content}"
+                                                  Foreground="{TemplateBinding Foreground}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Margin="0,0,0,10"
+                                                  AutomationProperties.AccessibilityView="Raw"/>
+                                <Border x:Name="Indicator"
+                                        Grid.Row="1"
+                                        Background="Transparent"
+                                        CornerRadius="1,1,0,0"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================================================================ -->
+        <!--  TITLE BAR (Row 0)                                               -->
+        <!-- ================================================================ -->
+        <Grid x:Name="AppTitleBar"
+              Grid.Row="0"
+              Height="40"
+              Background="{ThemeResource BackgroundPrimary}">
+
+            <!-- No wordmark here — the icon-dock sidebar carries its own gradient "K" logo. -->
+            <TextBlock Text="Kokoon Downloader"
+                       FontSize="12"
+                       FontWeight="SemiBold"
+                       Foreground="{ThemeResource TextSecondary}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- ================================================================ -->
+        <!--  MAIN CONTENT (Row 1)                                            -->
+        <!-- ================================================================ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="56"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ============================================================ -->
+            <!--  LEFT SIDEBAR (Column 0) — 56px icon-only dock.              -->
+            <!-- ============================================================ -->
+            <Border Grid.Column="0"
+                    Background="{ThemeResource BackgroundPrimary}"
+                    BorderBrush="{ThemeResource StrokeBrush}"
+                    BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Logo mark: app icon image (Assets\kokoon-256.png), already a rounded
+                         square with its own gradient fill baked in, so no extra Border chrome.
+                         Sized to match IconDockButtonStyle (38x38) below it. -->
+                    <Image Grid.Row="0"
+                           Source="ms-appx:///Assets/kokoon-256.png"
+                           Width="38" Height="38"
+                           HorizontalAlignment="Center"
+                           Margin="0,16,0,20"/>
+
+                    <!-- Downloads icon — the app's only page, so it is always shown selected;
+                         clicking it resets the filter to "All". The small dot lights up while
+                         there is at least one active (downloading) item. -->
+                    <Grid Grid.Row="1"
+                          HorizontalAlignment="Center"
+                          Margin="0,0,0,8">
+                        <controls:SidebarNavButton Style="{StaticResource IconDockButtonStyle}"
+                                IsSelected="True"
+                                Click="NavButton_AllDownloads_Click"
+                                ToolTipService.ToolTip="Downloads">
+                            <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons"/>
+                        </controls:SidebarNavButton>
+                        <Ellipse Width="7" Height="7"
+                                 Fill="{ThemeResource NeonBlueBrush}"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Top"
+                                 Margin="0,4,4,0"
+                                 IsHitTestVisible="False"
+                                 Visibility="{Binding ActiveCount, Converter={StaticResource CountToVisibilityConverter}}"/>
+                    </Grid>
+
+                    <!-- Video Grabber icon — opens the dedicated VideoGrabberDialog. -->
+                    <controls:HandCursorButton Grid.Row="2"
+                            Style="{StaticResource IconDockButtonStyle}"
+                            Margin="0,0,0,8"
+                            Click="NavButton_VideoGrabber_Click"
+                            ToolTipService.ToolTip="Video Grabber">
+                        <TextBlock Text="&#xE714;" FontFamily="Segoe Fluent Icons"/>
+                    </controls:HandCursorButton>
+
+                    <!-- Spacer -->
+                    <Grid Grid.Row="3"/>
+
+                    <!-- Settings -->
+                    <controls:HandCursorButton Grid.Row="4"
+                            Style="{StaticResource IconDockButtonStyle}"
+                            Margin="0,0,0,16"
+                            Command="{x:Bind ViewModel.OpenSettingsCommand}"
+                            ToolTipService.ToolTip="Settings">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons"/>
+                    </controls:HandCursorButton>
+                </Grid>
+            </Border>
+
+            <!-- ============================================================ -->
+            <!--  MAIN CONTENT AREA (Column 1)                                -->
+            <!-- ============================================================ -->
+            <Grid Grid.Column="1"
+                  Margin="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- ======================================================== -->
+                <!--  CONTENT HEADER (Row 0) — title, live stats line, and    -->
+                <!--  the 5-way filter pill row.                              -->
+                <!-- ======================================================== -->
+                <Grid Grid.Row="0" Padding="24,20,24,4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Title + compact "+ New" add-download button -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="Downloads"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{ThemeResource TextPrimary}"
+                                   VerticalAlignment="Center"/>
+                        <controls:HandCursorButton Grid.Column="1"
+                                Content="+ New"
+                                Padding="14,7"
+                                CornerRadius="10"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Background="{ThemeResource NeonBlueBrush}"
+                                Foreground="{ThemeResource AccentForegroundBrush}"
+                                BorderThickness="0"
+                                Command="{x:Bind ViewModel.AddDownloadCommand}"/>
+                    </Grid>
+
+                    <!-- Filter tabs for the 5 DownloadFilterMode values. The bottom border here
+                         is the tab strip's hairline rule; each tab's own selected-state underline
+                         (drawn by FilterTabButtonStyle) sits on top of it. -->
+                    <Border Grid.Row="1" Margin="0,14,0,0"
+                            BorderBrush="{ThemeResource StrokeBrush}"
+                            BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="28">
+                                <controls:SidebarNavButton Style="{StaticResource FilterTabButtonStyle}"
+                                        IsSelected="{Binding CurrentFilter, Converter={StaticResource FilterMatchConverter}, ConverterParameter=All}"
+                                        Click="NavButton_AllDownloads_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="All"/>
+                                        <TextBlock Text="{x:Bind ViewModel.TotalCount, Mode=OneWay}"
+                                                   Visibility="{Binding TotalCount, Converter={StaticResource CountToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </controls:SidebarNavButton>
+
+                                <controls:SidebarNavButton Style="{StaticResource FilterTabButtonStyle}"
+                                        IsSelected="{Binding CurrentFilter, Converter={StaticResource FilterMatchConverter}, ConverterParameter=Active}"
+                                        Click="NavButton_Active_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Active"/>
+                                        <TextBlock Text="{x:Bind ViewModel.ActiveCount, Mode=OneWay}"
+                                                   Visibility="{Binding ActiveCount, Converter={StaticResource CountToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </controls:SidebarNavButton>
+
+                                <controls:SidebarNavButton Style="{StaticResource FilterTabButtonStyle}"
+                                        IsSelected="{Binding CurrentFilter, Converter={StaticResource FilterMatchConverter}, ConverterParameter=Queued}"
+                                        Click="NavButton_Queued_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Queued"/>
+                                        <TextBlock Text="{x:Bind ViewModel.QueuedCount, Mode=OneWay}"
+                                                   Visibility="{Binding QueuedCount, Converter={StaticResource CountToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </controls:SidebarNavButton>
+
+                                <controls:SidebarNavButton Style="{StaticResource FilterTabButtonStyle}"
+                                        IsSelected="{Binding CurrentFilter, Converter={StaticResource FilterMatchConverter}, ConverterParameter=Completed}"
+                                        Click="NavButton_Completed_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Completed"/>
+                                        <TextBlock Text="{x:Bind ViewModel.CompletedCount, Mode=OneWay}"
+                                                   Visibility="{Binding CompletedCount, Converter={StaticResource CountToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </controls:SidebarNavButton>
+
+                                <controls:SidebarNavButton Style="{StaticResource FilterTabButtonStyle}"
+                                        IsSelected="{Binding CurrentFilter, Converter={StaticResource FilterMatchConverter}, ConverterParameter=Failed}"
+                                        Click="NavButton_Failed_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Failed"/>
+                                        <TextBlock Text="{x:Bind ViewModel.FailedCount, Mode=OneWay}"
+                                                   Visibility="{Binding FailedCount, Converter={StaticResource CountToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </controls:SidebarNavButton>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Batch Action Toolbar (visible when items are selected) -->
+                <Border x:Name="BatchToolbar"
+                        Grid.Row="1"
+                        Background="{ThemeResource BackgroundElevated}"
+                        BorderBrush="{ThemeResource StrokeBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="12,8"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock x:Name="SelectionCountText"
+                                   Text="0 selected"
+                                   Foreground="{ThemeResource TextPrimary}"
+                                   FontSize="13"
+                                   VerticalAlignment="Center"
+                                   Margin="4,0,12,0"/>
+                        <Button Content="Remove Selected"
+                                Padding="12,6"
+                                FontSize="12"
+                                Background="Transparent"
+                                Foreground="{ThemeResource NeonPinkBrush}"
+                                BorderBrush="{ThemeResource NeonPinkBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Command="{x:Bind ViewModel.RemoveSelectedCommand}"/>
+                        <Button Content="Delete with Files"
+                                Padding="12,6"
+                                FontSize="12"
+                                Background="Transparent"
+                                Foreground="{ThemeResource NeonPinkBrush}"
+                                BorderBrush="{ThemeResource NeonPinkBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Command="{x:Bind ViewModel.DeleteSelectedWithFileCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Empty State (visible when TotalCount == 0) -->
+                <StackPanel Grid.Row="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="16"
+                            Visibility="{Binding TotalCount, Converter={StaticResource CountToVisibilityConverter}, ConverterParameter=Invert}">
+                    <!-- 80x80 tinted icon tile: down-arrow into an open tray -->
+                    <Border Width="80"
+                            Height="80"
+                            CornerRadius="20"
+                            Background="{ThemeResource NeonBlue20}"
+                            HorizontalAlignment="Center">
+                        <Canvas Width="40" Height="40">
+                            <Path Data="M20,4 L20,24 M20,24 L12,16 M20,24 L28,16"
+                                  Stroke="{ThemeResource NeonBlueBrush}"
+                                  StrokeThickness="2.5"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Opacity="0.5"/>
+                            <Path Data="M6,30 L6,34 C6,35.1 6.9,36 8,36 L32,36 C33.1,36 34,35.1 34,34 L34,30"
+                                  Stroke="{ThemeResource NeonBlueBrush}"
+                                  StrokeThickness="2.5"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Opacity="0.3"/>
+                        </Canvas>
+                    </Border>
+                    <StackPanel HorizontalAlignment="Center" Spacing="6">
+                        <TextBlock Text="No downloads yet"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{ThemeResource TextPrimary}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Paste a URL to start downloading files."
+                                   FontSize="13"
+                                   Foreground="{ThemeResource TextSecondary}"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="300"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                        <Button Content="+ Add Download"
+                                Padding="20,10"
+                                Style="{StaticResource NeonButtonPrimaryStyle}"
+                                Command="{x:Bind ViewModel.AddDownloadCommand}"/>
+                        <Button Content="Paste URL"
+                                Padding="20,10"
+                                Style="{StaticResource NeonButtonStyle}"
+                                Command="{x:Bind ViewModel.PasteUrlCommand}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                        <Border BorderBrush="{ThemeResource StrokeBrush}"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Padding="5,1">
+                            <TextBlock Text="Ctrl+V"
+                                       FontFamily="Cascadia Code, Consolas"
+                                       FontSize="10"
+                                       Foreground="{ThemeResource TextDisabled}"/>
+                        </Border>
+                        <TextBlock Text="to quick-paste a URL"
+                                   FontSize="11"
+                                   Foreground="{ThemeResource TextDisabled}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Download ListView (visible when TotalCount > 0) -->
+                <ListView Grid.Row="2"
+                          ItemsSource="{x:Bind ViewModel.FilteredDownloads, Mode=OneWay}"
+                          SelectionMode="Multiple"
+                          Background="Transparent"
+                          Padding="8"
+                          SelectionChanged="DownloadListView_SelectionChanged"
+                          Visibility="{Binding TotalCount, Converter={StaticResource CountToVisibilityConverter}}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <!-- One DataTemplate with four mutually-exclusive top-level elements
+                             (Active / Paused-or-Queued compact / Completed / Failed), each gated
+                             by a Visibility binding rather than a DataTemplateSelector: Collapsed
+                             elements don't participate in ListView item-height measurement, so
+                             each realized row still sizes to whichever branch is visible.
+
+                             IsCompactRow (DownloadItemViewModel) covers Queued items too — they
+                             set none of IsActive/IsPaused/IsCompleted/IsFailed, so without it
+                             they'd match no branch and render as an invisible zero-height row.
+
+                             Segment mini-bar strip uses a fixed per-segment width (20px) rather
+                             than flex-equal width — WinUI's ItemsControl has no built-in
+                             UniformGrid-style panel without a community-toolkit dependency. -->
+                        <DataTemplate x:DataType="vm:DownloadItemViewModel">
+                            <Grid>
+
+                                <!-- ================================================ -->
+                                <!--  ACTIVE / DOWNLOADING CARD                       -->
+                                <!-- ================================================ -->
+                                <Border Background="{ThemeResource BackgroundElevated}"
+                                        BorderBrush="{ThemeResource NeonBlue40}"
+                                        BorderThickness="1"
+                                        CornerRadius="{StaticResource CornerRadiusCard}"
+                                        Padding="20,18"
+                                        Margin="8,4"
+                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Border.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Cancel" Command="{x:Bind CancelCommand}"/>
+                                            <MenuFlyoutItem Text="Copy Link" Command="{x:Bind CopyLinkCommand}"/>
+                                            <MenuFlyoutSeparator/>
+                                            <MenuFlyoutItem Text="Remove from list" Command="{x:Bind RemoveCommand}"/>
+                                            <MenuFlyoutItem Text="Delete with file" Command="{x:Bind DeleteWithFileCommand}"/>
+                                        </MenuFlyout>
+                                    </Border.ContextFlyout>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Icon badge: 40x40, tinted by item type (video = purple, else teal) -->
+                                        <Grid Grid.Column="0" Width="40" Height="40" Margin="0,0,14,0" VerticalAlignment="Top">
+                                            <Border CornerRadius="10"
+                                                    Background="{ThemeResource NeonPurple20}"
+                                                    Visibility="{Binding IsVideoDownload, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <TextBlock Text="&#xE714;" FontFamily="Segoe Fluent Icons" FontSize="18"
+                                                           Foreground="{ThemeResource NeonPurpleBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <Border CornerRadius="10"
+                                                    Background="{ThemeResource NeonTeal20}"
+                                                    Visibility="{Binding IsVideoDownload, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+                                                <TextBlock Text="{x:Bind FileIconGlyph, Mode=OneWay}" FontFamily="Segoe Fluent Icons" FontSize="18"
+                                                           Foreground="{ThemeResource NeonTealBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- Middle: title + pill, metadata, progress, segments -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{x:Bind FileName, Mode=OneWay}"
+                                                           FontSize="14" FontWeight="SemiBold"
+                                                           Foreground="{ThemeResource TextPrimary}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,10,0"/>
+                                                <Border Grid.Column="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center"
+                                                        Background="{ThemeResource NeonBlue20}">
+                                                    <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                               FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{Binding StatusColor, Converter={StaticResource ColorToBrushConverter}}"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Metadata line: domain · bytes · colored speed · ETA.
+                                                 SpeedText is a separate TextBlock with a fixed MinWidth
+                                                 (not an inline Run) so its width changes on every progress
+                                                 tick don't push the trailing ETA text sideways. -->
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock FontSize="11" Foreground="{ThemeResource TextSecondary}">
+                                                    <Run Text="{x:Bind DomainText, Mode=OneWay}"/>
+                                                    <Run Text=" &#x00B7; "/>
+                                                    <Run Text="{x:Bind ProgressText, Mode=OneWay}" FontFamily="Cascadia Code, Consolas"/>
+                                                    <Run Text=" &#x00B7; "/>
+                                                </TextBlock>
+                                                <TextBlock Text="{x:Bind SpeedText, Mode=OneWay}"
+                                                           FontSize="11"
+                                                           FontFamily="Cascadia Code, Consolas"
+                                                           Foreground="{ThemeResource NeonBlueBrush}"
+                                                           MinWidth="70"/>
+                                                <TextBlock FontSize="11" Foreground="{ThemeResource TextSecondary}">
+                                                    <Run Text=" &#x00B7; "/>
+                                                    <Run Text="{x:Bind EtaText, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <!-- Progress bar: 6px, gradient fill, animated diagonal-stripe overlay (active only) -->
+                                            <Grid Margin="0,10,0,0" Height="6">
+                                                <ProgressBar Height="6" MinHeight="6" CornerRadius="3"
+                                                             Background="{ThemeResource BackgroundPrimary}"
+                                                             Foreground="{ThemeResource LogoGradientBrush}"
+                                                             Value="{Binding Progress, Converter={StaticResource ProgressToPercentConverter}}"
+                                                             Maximum="100"/>
+                                                <ProgressBar x:Name="StripeOverlay" Height="6" MinHeight="6" CornerRadius="3"
+                                                             Background="Transparent"
+                                                             Value="{Binding Progress, Converter={StaticResource ProgressToPercentConverter}}"
+                                                             Maximum="100"
+                                                             Loaded="StripeOverlay_Loaded">
+                                                    <ProgressBar.Foreground>
+                                                        <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="14,14" SpreadMethod="Repeat">
+                                                            <LinearGradientBrush.Transform>
+                                                                <TranslateTransform X="0"/>
+                                                            </LinearGradientBrush.Transform>
+                                                            <GradientStop Color="Transparent" Offset="0"/>
+                                                            <GradientStop Color="Transparent" Offset="0.5"/>
+                                                            <GradientStop Color="#14FFFFFF" Offset="0.5"/>
+                                                            <GradientStop Color="#14FFFFFF" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </ProgressBar.Foreground>
+                                                </ProgressBar>
+                                            </Grid>
+
+                                            <!-- Segment mini-bar strip: 4px/2px-radius/4px-gap, real dynamic per-Segments binding -->
+                                            <Grid Margin="0,8,0,0"
+                                                  Visibility="{Binding DataContext.ShowSegmentColors, ElementName=RootWindowGrid, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <ItemsControl ItemsSource="{x:Bind Segments, Mode=OneWay}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:SegmentViewModel">
+                                                            <ProgressBar Width="20" Height="4" Margin="0,0,4,0"
+                                                                         Minimum="0" Maximum="1"
+                                                                         Value="{x:Bind Progress, Mode=OneWay}"
+                                                                         CornerRadius="2"
+                                                                         Background="{ThemeResource StrokeBrush}"
+                                                                         Foreground="{Binding SegmentColor, Converter={StaticResource ColorToBrushConverter}}"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- Hover actions: Pause + Open Folder always visible, rest behind "⋯" -->
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+                                            <Button Width="30" Height="30" Padding="0" CornerRadius="8"
+                                                    Background="{ThemeResource BackgroundPrimary}" BorderThickness="0"
+                                                    Command="{x:Bind PauseCommand}"
+                                                    ToolTipService.ToolTip="Pause">
+                                                <TextBlock Text="&#xE769;" FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource TextSecondary}"/>
+                                            </Button>
+                                            <Button Width="30" Height="30" Padding="0" CornerRadius="8"
+                                                    Background="{ThemeResource BackgroundPrimary}" BorderThickness="0"
+                                                    Command="{x:Bind OpenFolderCommand}"
+                                                    ToolTipService.ToolTip="Open Folder">
+                                                <TextBlock Text="&#xE8B7;" FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource TextSecondary}"/>
+                                            </Button>
+                                            <Button Width="30" Height="30" Padding="0" CornerRadius="8"
+                                                    Background="{ThemeResource BackgroundPrimary}" BorderThickness="0"
+                                                    Click="MoreActionsButton_Click"
+                                                    ToolTipService.ToolTip="More">
+                                                <FlyoutBase.AttachedFlyout>
+                                                    <MenuFlyout>
+                                                        <MenuFlyoutItem Text="Cancel" Command="{x:Bind CancelCommand}"/>
+                                                        <MenuFlyoutItem Text="Copy Link" Command="{x:Bind CopyLinkCommand}"/>
+                                                        <MenuFlyoutSeparator/>
+                                                        <MenuFlyoutItem Text="Remove from list" Command="{x:Bind RemoveCommand}"/>
+                                                        <MenuFlyoutItem Text="Delete with file" Command="{x:Bind DeleteWithFileCommand}"/>
+                                                    </MenuFlyout>
+                                                </FlyoutBase.AttachedFlyout>
+                                                <TextBlock Text="&#xE712;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{ThemeResource TextSecondary}"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- ================================================ -->
+                                <!--  PAUSED / QUEUED — compact single-line row       -->
+                                <!-- ================================================ -->
+                                <Border Background="{ThemeResource BackgroundElevated}"
+                                        BorderBrush="{ThemeResource StrokeBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{StaticResource CornerRadiusCard}"
+                                        Padding="20,14"
+                                        Margin="8,4"
+                                        Visibility="{Binding IsCompactRow, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Border.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Copy Link" Command="{x:Bind CopyLinkCommand}"/>
+                                            <MenuFlyoutItem Text="Open Folder" Command="{x:Bind OpenFolderCommand}"/>
+                                            <MenuFlyoutSeparator/>
+                                            <MenuFlyoutItem Text="Remove from list" Command="{x:Bind RemoveCommand}"/>
+                                            <MenuFlyoutItem Text="Delete with file" Command="{x:Bind DeleteWithFileCommand}"/>
+                                        </MenuFlyout>
+                                    </Border.ContextFlyout>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10" Margin="0,0,14,0"
+                                                Background="{ThemeResource NeonAmber20}">
+                                            <TextBlock Text="{x:Bind FileIconGlyph, Mode=OneWay}" FontFamily="Segoe Fluent Icons" FontSize="18"
+                                                       Foreground="{ThemeResource NeonAmberBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{x:Bind FileName, Mode=OneWay}"
+                                                           FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{ThemeResource TextPrimary}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,0,10,0"/>
+                                                <Border Grid.Column="1" CornerRadius="10" Padding="8,2" Background="{ThemeResource NeonAmber20}">
+                                                    <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                               FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="{ThemeResource NeonAmberBrush}"/>
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{ThemeResource TextSecondary}">
+                                                <Run Text="{x:Bind DomainText, Mode=OneWay}"/>
+                                                <Run Text=" &#x00B7; "/>
+                                                <Run Text="{x:Bind ProgressText, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <!-- Resume when paused; Cancel when queued (neither Active nor Paused) -->
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                            <Button Width="30" Height="30" Padding="0" CornerRadius="8"
+                                                    Background="{ThemeResource NeonBlue20}" BorderThickness="0"
+                                                    Command="{x:Bind ResumeCommand}"
+                                                    Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                    ToolTipService.ToolTip="Resume">
+                                                <TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource NeonBlueBrush}"/>
+                                            </Button>
+                                            <Button Width="30" Height="30" Padding="0" CornerRadius="8"
+                                                    Background="{ThemeResource BackgroundPrimary}" BorderThickness="0"
+                                                    Command="{x:Bind CancelCommand}"
+                                                    Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"
+                                                    ToolTipService.ToolTip="Cancel">
+                                                <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource TextSecondary}"/>
+                                            </Button>
+                                            <Button Width="30" Height="30" Padding="0" CornerRadius="8"
+                                                    Background="{ThemeResource BackgroundPrimary}" BorderThickness="0"
+                                                    Click="MoreActionsButton_Click"
+                                                    ToolTipService.ToolTip="More">
+                                                <FlyoutBase.AttachedFlyout>
+                                                    <MenuFlyout>
+                                                        <MenuFlyoutItem Text="Cancel" Command="{x:Bind CancelCommand}"/>
+                                                        <MenuFlyoutItem Text="Copy Link" Command="{x:Bind CopyLinkCommand}"/>
+                                                        <MenuFlyoutSeparator/>
+                                                        <MenuFlyoutItem Text="Remove from list" Command="{x:Bind RemoveCommand}"/>
+                                                        <MenuFlyoutItem Text="Delete with file" Command="{x:Bind DeleteWithFileCommand}"/>
+                                                    </MenuFlyout>
+                                                </FlyoutBase.AttachedFlyout>
+                                                <TextBlock Text="&#xE712;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{ThemeResource TextSecondary}"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- ================================================ -->
+                                <!--  COMPLETED — optional "COMPLETED" group label +   -->
+                                <!--  relocated Clear Completed action, then a         -->
+                                <!--  borderless divided list row                      -->
+                                <!-- ================================================ -->
+                                <StackPanel Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Grid Margin="12,12,12,6"
+                                          Visibility="{Binding IsFirstCompletedInGroup, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="COMPLETED"
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{ThemeResource TextDisabled}"/>
+                                        <Button Grid.Column="1" Content="Clear Completed"
+                                                Padding="10,4" FontSize="11"
+                                                Background="Transparent"
+                                                Foreground="{ThemeResource TextSecondary}"
+                                                BorderThickness="0"
+                                                Command="{Binding DataContext.ClearCompletedCommand, ElementName=RootWindowGrid}"/>
+                                    </Grid>
+                                    <Border Background="{ThemeResource BackgroundElevated}"
+                                            BorderBrush="{ThemeResource StrokeBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="20,12"
+                                            Margin="8,0">
+                                        <Border.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem Text="Open File" Command="{x:Bind OpenFileCommand}"/>
+                                                <MenuFlyoutItem Text="Copy Link" Command="{x:Bind CopyLinkCommand}"/>
+                                                <MenuFlyoutSeparator/>
+                                                <MenuFlyoutItem Text="Remove from list" Command="{x:Bind RemoveCommand}"/>
+                                                <MenuFlyoutItem Text="Delete with file" Command="{x:Bind DeleteWithFileCommand}"/>
+                                            </MenuFlyout>
+                                        </Border.ContextFlyout>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#x2713;" FontSize="14"
+                                                       Foreground="{ThemeResource NeonGreenBrush}"
+                                                       Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{x:Bind FileName, Mode=OneWay}"
+                                                       FontSize="13" Foreground="{ThemeResource TextPrimary}"
+                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{x:Bind FileSizeText, Mode=OneWay}"
+                                                       FontFamily="Cascadia Code, Consolas" FontSize="11"
+                                                       Foreground="{ThemeResource TextDisabled}"
+                                                       Margin="12,0" VerticalAlignment="Center"/>
+                                            <Button Grid.Column="3" Width="26" Height="26" Padding="0" CornerRadius="6"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Command="{x:Bind OpenFolderCommand}"
+                                                    ToolTipService.ToolTip="Open Folder">
+                                                <TextBlock Text="&#xE8B7;" FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource TextDisabled}"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- ================================================ -->
+                                <!--  FAILED — tinted alert-style row                 -->
+                                <!-- ================================================ -->
+                                <Border Background="{ThemeResource NeonPink20}"
+                                        BorderBrush="{ThemeResource NeonPink20}"
+                                        BorderThickness="1"
+                                        CornerRadius="{StaticResource CornerRadiusCard}"
+                                        Padding="20,12"
+                                        Margin="8,4"
+                                        Visibility="{Binding IsFailed, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Border.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Copy Link" Command="{x:Bind CopyLinkCommand}"/>
+                                            <MenuFlyoutSeparator/>
+                                            <MenuFlyoutItem Text="Remove from list" Command="{x:Bind RemoveCommand}"/>
+                                            <MenuFlyoutItem Text="Delete with file" Command="{x:Bind DeleteWithFileCommand}"/>
+                                        </MenuFlyout>
+                                    </Border.ContextFlyout>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="!" FontSize="14" FontWeight="Bold"
+                                                   Foreground="{ThemeResource NeonPinkBrush}"
+                                                   Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <Grid Grid.Column="1" VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{x:Bind FileName, Mode=OneWay}"
+                                                       FontSize="13" Foreground="{ThemeResource TextPrimary}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Margin="0,0,8,0"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{x:Bind StatusText, Mode=OneWay}"
+                                                       FontSize="11" Foreground="{ThemeResource NeonPinkBrush}"/>
+                                        </Grid>
+                                        <Button Grid.Column="2" Width="26" Height="26" Padding="0" CornerRadius="6"
+                                                Background="{ThemeResource NeonBlue20}" BorderThickness="0"
+                                                Command="{x:Bind RetryCommand}"
+                                                ToolTipService.ToolTip="Retry">
+                                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{ThemeResource NeonBlueBrush}"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Grid>
+
+        <!-- ================================================================ -->
+        <!--  STATUS BAR (Row 2)                                              -->
+        <!-- ================================================================ -->
+        <Border Grid.Row="2"
+                Background="{ThemeResource BackgroundPrimary}"
+                BorderBrush="{ThemeResource StrokeBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="16,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock FontSize="12" Foreground="{ThemeResource NeonBlueBrush}" VerticalAlignment="Center">
+                        <Run Text="Active: "/>
+                        <Run Text="{x:Bind ViewModel.ActiveCount, Mode=OneWay}"/>
+                    </TextBlock>
+
+                    <TextBlock Text=" | "
+                               Foreground="{ThemeResource NeonGreenBrush}"
+                               FontSize="12"
+                               Margin="12,0"
+                               VerticalAlignment="Center"/>
+
+                    <TextBlock FontSize="12" Foreground="{ThemeResource NeonAmberBrush}" VerticalAlignment="Center">
+                        <Run Text="Queued: "/>
+                        <Run Text="{x:Bind ViewModel.QueuedCount, Mode=OneWay}"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Speed TextBlock has a fixed MinWidth so TotalSpeedText's width changes on
+                     every tick don't shift the " | " separator and StorageUsedText sideways. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock FontSize="12"
+                               Foreground="{ThemeResource StrokeBrush}"
+                               FontFamily="Cascadia Code, Consolas"
+                               MinWidth="130"
+                               VerticalAlignment="Center">
+                        <Run Text="Speed: "/>
+                        <Run Text="{x:Bind ViewModel.TotalSpeedText, Mode=OneWay}"/>
+                    </TextBlock>
+
+                    <TextBlock Text=" | "
+                               Foreground="{ThemeResource StrokeBrush}"
+                               FontSize="12"
+                               Margin="12,0"
+                               VerticalAlignment="Center"/>
+
+                    <TextBlock Text="{x:Bind ViewModel.StorageUsedText, Mode=OneWay}"
+                               Foreground="{ThemeResource TextDisabled}"
+                               FontSize="12"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
