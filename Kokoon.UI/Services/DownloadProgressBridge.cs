@@ -126,6 +126,8 @@ public sealed class DownloadProgressBridge : IDisposable
             vm.SpeedText = speedBps > 0 ? FormatHelper.FormatSpeed(speedBps) : "—";
             vm.EtaText = FormatHelper.FormatEta(remainingBytes, speedBps);
             vm.Status = item.Status;
+            if (item.TotalBytes > 0)
+                vm.FileSizeText = FormatHelper.FormatBytes(item.TotalBytes);
 
             // Synchronise segment-level progress.
             UpdateSegments(vm, item, speedBps);
@@ -153,6 +155,8 @@ public sealed class DownloadProgressBridge : IDisposable
             vm.SpeedText = "—";
             vm.EtaText = "—";
             vm.ProgressText = FormatHelper.FormatProgress(item.TotalBytes, item.TotalBytes);
+            if (item.TotalBytes > 0)
+                vm.FileSizeText = FormatHelper.FormatBytes(item.TotalBytes);
 
             _mainViewModel.UpdateCounts();
             _mainViewModel.RefreshFilteredDownloads();

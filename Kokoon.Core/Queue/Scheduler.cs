@@ -298,6 +298,21 @@ public class DownloadScheduler : IHostedService, IDisposable
             }
 
             // Download completed successfully.
+            // For YtDlpFull downloads, yt-dlp reports per-stream sizes in its progress
+            // output — when downloading a merged format (e.g. "137+bestaudio"), the last
+            // progress line belongs to the audio stream, so item.TotalBytes would be the
+            // audio size, not the final muxed file. Use the actual file on disk instead.
+            if (item.Mode == DownloadMode.YtDlpFull)
+            {
+                var finalPath = Path.Combine(item.SavePath, item.FileName);
+                if (File.Exists(finalPath))
+                {
+                    var fileSize = new FileInfo(finalPath).Length;
+                    item.TotalBytes = fileSize;
+                    item.DownloadedBytes = fileSize;
+                }
+            }
+
             await _repository.UpdateStatusAsync(item.Id, DownloadStatus.Completed, schedulerCt).ConfigureAwait(false);
             await PersistBytesAsync(item, schedulerCt).ConfigureAwait(false);
 

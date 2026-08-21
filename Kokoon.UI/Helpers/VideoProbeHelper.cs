@@ -56,6 +56,22 @@ public static class VideoProbeHelper
         // need to be paired with an audio stream, or yt-dlp downloads video with no audio track.
         item.FormatId = format.IsVideoOnly ? $"{format.FormatId}+bestaudio" : format.FormatId;
         item.FileName = SanitizeFileName(videoInfo.Title) + "." + format.Extension;
+
+        // Set initial TotalBytes from probed format data so the UI shows a size
+        // immediately. For video-only formats paired with bestaudio, sum both
+        // streams for a closer estimate.
+        long estimatedSize = format.FileSize ?? 0;
+        if (format.IsVideoOnly)
+        {
+            var bestAudio = videoInfo.Formats
+                .Where(f => f.IsAudioOnly && f.FileSize.HasValue)
+                .OrderByDescending(f => f.FileSize!.Value)
+                .FirstOrDefault();
+            if (bestAudio?.FileSize is long audioSize)
+                estimatedSize += audioSize;
+        }
+        if (estimatedSize > 0)
+            item.TotalBytes = estimatedSize;
     }
 
     /// <summary>

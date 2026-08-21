@@ -917,13 +917,13 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock FontSize="12" Foreground="{ThemeResource NeonBlueBrush}" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="{ThemeResource NeonGreenBrush}" VerticalAlignment="Center">
                         <Run Text="Active: "/>
                         <Run Text="{x:Bind ViewModel.ActiveCount, Mode=OneWay}"/>
                     </TextBlock>
 
                     <TextBlock Text=" | "
-                               Foreground="{ThemeResource NeonGreenBrush}"
+                               Foreground="{ThemeResource StrokeBrush}"
                                FontSize="12"
                                Margin="12,0"
                                VerticalAlignment="Center"/>
@@ -938,7 +938,7 @@
                      every tick don't shift the " | " separator and StorageUsedText sideways. -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock FontSize="12"
-                               Foreground="{ThemeResource StrokeBrush}"
+                               Foreground="{ThemeResource NeonBlueBrush}"
                                FontFamily="Cascadia Code, Consolas"
                                MinWidth="130"
                                VerticalAlignment="Center">
